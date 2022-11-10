@@ -1,31 +1,53 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to find everywhere for classes, files, tool windows, actions, and settings.
 import time
 
+from datetime import datetime
+from dicts.months import months
 from log_print import Log
 from selenium.common import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 
-class Ofert:
-    def __init__(self, olxofert: WebElement):
-        self.price = olxofert.find_element(by=By.CLASS_NAME, value="price").text
-        self.name = olxofert.find_element(by=By.CLASS_NAME, value="normal").text
-        self.link = olxofert.find_element(by=By.XPATH, value="//*[contains(@class,'offerLink')]").get_attribute("href")
+class Offer:
+    def __init__(self, olx_offer: WebElement):
+        self.price = olx_offer.find_element(by=By.CLASS_NAME, value="price").text
+        self.name = olx_offer.find_element(by=By.CLASS_NAME, value="normal").text
+        self.link = olx_offer.find_element(by=By.XPATH, value=".//*[contains(@class,'offerLink')]").get_attribute(
+            "href")
         self.link = self.link[:self.link.find(".html") + 5]
-        self.date_n_location = olxofert.find_element(by=By.CLASS_NAME, value="date-location").text
+        date_n_location = olx_offer.find_element(by=By.CLASS_NAME, value="date-location").text
+        self.extract_date_n_location(date_n_location)
+
+    def extract_date_n_location(self, date_n_location):
+        if 'dzisiaj' in date_n_location:
+            self.location = date_n_location[:date_n_location.find("dzisiaj") - 1]
+            self.date = datetime.now().strftime('%d/%m/%Y')
+        else:
+            for i in date_n_location:
+                if not i.isdigit():
+                    pass
+                else:
+                    cut_pointer = date_n_location.index(i)
+                    break
+            self.location = date_n_location[:cut_pointer - 1]
+            date_n_location = date_n_location[cut_pointer:]
+            for i in date_n_location:
+                if not i.isdigit():
+                    cut_pointer = date_n_location.index(i)
+                    break
+            try:
+                self.date = f"{date_n_location[:cut_pointer]}/{months[date_n_location[cut_pointer + 1:]]}/{datetime.now().strftime('%Y')[2:]}"
+            except KeyError:
+                self.date = f"{date_n_location[:cut_pointer]}/{date_n_location[cut_pointer + 1:]}/{datetime.now().strftime('%Y')[2:]}"
 
 
-def read_fav_oferts(driver, _mail: str, _password: str) -> list:
+def read_fav_oferts(driver, _mail: str, _password: str) -> list[Offer]:
     """
 
     :param driver:
     :param _mail:
-    :param _password: 
-    :return: 
+    :param _password:
+    :return: list
     """
 
     Log("Open selenium web")
@@ -56,6 +78,7 @@ def read_fav_oferts(driver, _mail: str, _password: str) -> list:
 
     Log("Go to fav tab")
     driver.get("https://www.olx.pl/obserwowane/")
+    time.sleep(1)
     for _ in range(2):
         try:
             change_view_button = driver.find_element(by=By.XPATH, value='//*[@id="observedViewTiles"]')
@@ -66,16 +89,16 @@ def read_fav_oferts(driver, _mail: str, _password: str) -> list:
             Log(str(error))
 
     Log("Get WebObject and extract data")
-
+    time.sleep(1)
     for _ in range(3):
-        oferts_data = []
+        offers_data = []
         try:
             oferts = driver.find_elements(by=By.XPATH, value="//*[contains(@class,'observedad')]")
             for element in oferts:
-                oferts_data.append(Ofert(element))
+                offers_data.append(Offer(element))
             break
         except (NoSuchElementException, StaleElementReferenceException) as error:
             time.sleep(1)
             Log(str(error))
 
-    return oferts_data
+    return offers_data
