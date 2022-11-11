@@ -71,6 +71,7 @@ def read_fav_oferts(driver, _mail: str, _password: str) -> list[Offer]:
 
     Log("Close popup")
     time.sleep(2)
+    driver.implicitly_wait(2)
     for _ in range(2):
         try:
             close_button = driver.find_element(by=By.XPATH, value='//*[@aria-label="Close"]')
@@ -83,6 +84,7 @@ def read_fav_oferts(driver, _mail: str, _password: str) -> list[Offer]:
     Log("Go to fav tab")
     driver.get("https://www.olx.pl/obserwowane/")
     time.sleep(2)
+    driver.implicitly_wait(2)
     for _ in range(2):
         try:
             change_view_button = driver.find_element(by=By.XPATH, value='//*[@id="observedViewTiles"]')
@@ -92,6 +94,7 @@ def read_fav_oferts(driver, _mail: str, _password: str) -> list[Offer]:
             time.sleep(1)
             Log(str(error))
 
+    driver.implicitly_wait(10)
     Log("Get WebObject and extract data")
     time.sleep(1)
     for _ in range(3):
