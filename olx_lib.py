@@ -1,6 +1,6 @@
 import time
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from dicts.months import months
 from log_print import Log
 from selenium.common import NoSuchElementException, StaleElementReferenceException
@@ -22,6 +22,9 @@ class Offer:
         if 'dzisiaj' in date_n_location:
             self.location = date_n_location[:date_n_location.find("dzisiaj") - 1]
             self.date = datetime.now().strftime('%d/%m/%Y')
+        elif 'wczoraj' in date_n_location:
+            self.location = date_n_location[:date_n_location.find("wczoraj") - 1]
+            self.date = (datetime.now() - timedelta(days=1)).strftime('%d/%m/%Y')
         else:
             for i in date_n_location:
                 if not i.isdigit():
@@ -67,7 +70,8 @@ def read_fav_oferts(driver, _mail: str, _password: str) -> list[Offer]:
     driver.find_element(by=By.XPATH, value='//*[@data-testid="login-submit-button"]').click()
 
     Log("Close popup")
-    for _ in range(3):
+    time.sleep(2)
+    for _ in range(2):
         try:
             close_button = driver.find_element(by=By.XPATH, value='//*[@aria-label="Close"]')
             close_button.click()
@@ -78,7 +82,7 @@ def read_fav_oferts(driver, _mail: str, _password: str) -> list[Offer]:
 
     Log("Go to fav tab")
     driver.get("https://www.olx.pl/obserwowane/")
-    time.sleep(1)
+    time.sleep(2)
     for _ in range(2):
         try:
             change_view_button = driver.find_element(by=By.XPATH, value='//*[@id="observedViewTiles"]')
