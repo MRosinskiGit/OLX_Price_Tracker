@@ -118,7 +118,10 @@ class Offersheet:
             self.sheet[
                 f"{self.find_column('Link')}{str(row)}"] = f"{offer.link} - {datetime.now().strftime('%d/%m/%Y')} \n{ofert_excel_link}"
         if changed:
+            Log(f"Change detected in {offer.name}")
             self.highlight_row(row)
+        else:
+            Log(f"No changes detected")
     def look_in_inactive(self, search_by_category: str, value) -> int:
         found_row = None
         column = self.find_column(search_by_category)
@@ -160,6 +163,7 @@ class Offersheet:
         try:
             for row in rows_to_remove:
                 self.move_row(frm=row, to=self.find_first_empty_row_in_inactive())
+            Log(f"{len(rows_to_remove)} moved to inactive")
         except TypeError:
             pass
 
