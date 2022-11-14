@@ -9,9 +9,11 @@ EXCEL_FILE_NAME = 'test.xlsx'
 if __name__ == "__main__":
     with open('password.txt', 'r') as file:
         password = file.read()
+        #change to config file
 
     driver = webdriver.Chrome()
     offers = read_fav_oferts(driver=driver, _mail='m.rosinski97@gmail.com', _password=password)
+    #todo change email reading
     driver.close()
 
     excel_sheet = Offersheet(EXCEL_FILE_NAME)
