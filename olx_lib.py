@@ -11,6 +11,11 @@ from selenium.webdriver.remote.webelement import WebElement
 class Offer:
     def __init__(self, olx_offer: WebElement):
         self.price = olx_offer.find_element(by=By.CLASS_NAME, value="price").text
+        try:
+            self.price = self.price.replace("zł", "")
+            self.price = self.price.replace(" ", "")
+        except Exception:
+            Log(f"Problem with transforming {self.price}")
         self.name = olx_offer.find_element(by=By.CLASS_NAME, value="normal").text
         self.link = olx_offer.find_element(by=By.XPATH, value=".//*[contains(@class,'offerLink')]").get_attribute(
             "href")
@@ -97,7 +102,7 @@ def read_fav_oferts(driver, _mail: str, _password: str) -> list[Offer]:
     driver.implicitly_wait(10)
     Log("Get WebObject and extract data")
     time.sleep(1)
-    for _ in range(3):
+    for _ in range(2):
         offers_data = []
         try:
             oferts = driver.find_elements(by=By.XPATH, value="//*[contains(@class,'observedad')]")

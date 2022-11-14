@@ -1,20 +1,23 @@
 from excel_olx import Offersheet
 from olx_lib import read_fav_oferts
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-EXCEL_FILE_NAME = 'test.xlsx'
-# offers = [Offer("6 500 zł","www.onet.pl"), Offer("19 999 zł", "www.wp.pl")]
-
+EXCEL_FILE_NAME = "oferts.xlsx"
 
 if __name__ == "__main__":
-    with open('password.txt', 'r') as file:
-        password = file.read()
-        #change to config file
+    with open('config.conf', 'r') as file:
+        data = file.readlines()
+        password = data[1].replace("password:", "")
+        email = data[0].replace("email:", "").replace("\n", "")
 
-    driver = webdriver.Chrome()
-    offers = read_fav_oferts(driver=driver, _mail='m.rosinski97@gmail.com', _password=password)
-    #todo change email reading
-    driver.close()
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+
+    driver = webdriver.Chrome(options=chrome_options)
+    offers = read_fav_oferts(driver=driver, _mail=email, _password=password)
+
+    driver.quit()
 
     excel_sheet = Offersheet(EXCEL_FILE_NAME)
 

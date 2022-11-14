@@ -1,11 +1,13 @@
 import os
+import shutil
 from datetime import datetime
+from log_print import Log
 from olx_lib import Offer
 from openpyxl import *
 from openpyxl.styles import PatternFill, Color, Alignment
 
 LENGTH_LIMIT = 500
-
+MAX_COLUMNS = 15
 
 class Offersheet:
     def __init__(self, filename: str):
@@ -23,9 +25,19 @@ class Offersheet:
         }
         if self.filename in os.listdir(os.path.abspath(os.curdir)):
             self.window = load_workbook(filename=self.filename)
+            self.sheet = self.window.active
+            try:
+                shutil.copy2(filename, f"backup/{filename.replace('.xlsx', '')}_backup.xlsx")
+            except IOError:
+                Log("backup problem")
+            for i in range(MAX_COLUMNS):
+                column_name = self.sheet[f'{chr(ord("A") + i)}1'].value
+                if column_name not in self.titles:
+                    self.titles.append(column_name)
+
         else:
             self.window = self.create_sheet()
-        self.sheet = self.window.active
+            self.sheet = self.window.active
 
     def create_sheet(self) -> Workbook:
         self.window = Workbook()
@@ -84,23 +96,29 @@ class Offersheet:
         return found_row
 
     def compare_offers(self, row: int, offer: Offer):
+        changed = False
         ofert_excel_name = self.sheet[f"{self.find_column('Name')}{str(row)}"].value
         if ofert_excel_name != offer.name:
+            changed = True
             self.sheet[
                 f"{self.find_column('Name')}{str(row)}"] = f"{offer.name} - {datetime.now().strftime('%d/%m/%Y')} \n{ofert_excel_name}"
         ofert_excel_price = self.sheet[f"{self.find_column('Price')}{str(row)}"].value
         if ofert_excel_price != offer.price:
+            changed = True
             self.sheet[
                 f"{self.find_column('Price')}{str(row)}"] = f"{offer.price} - {datetime.now().strftime('%d/%m/%Y')} \n{ofert_excel_price}"
         ofert_excel_location = self.sheet[f"{self.find_column('Location')}{str(row)}"].value
         if ofert_excel_location != offer.location:
+            changed = True
             self.sheet[
                 f"{self.find_column('Location')}{str(row)}"] = f"{offer.location} - {datetime.now().strftime('%d/%m/%Y')} \n{ofert_excel_location}"
         ofert_excel_link = self.sheet[f"{self.find_column('Link')}{str(row)}"].value
         if ofert_excel_link != offer.link:
+            changed = True
             self.sheet[
                 f"{self.find_column('Link')}{str(row)}"] = f"{offer.link} - {datetime.now().strftime('%d/%m/%Y')} \n{ofert_excel_link}"
-
+        if changed:
+            self.highlight_row(row)
     def look_in_inactive(self, search_by_category: str, value) -> int:
         found_row = None
         column = self.find_column(search_by_category)
@@ -126,6 +144,7 @@ class Offersheet:
         for column in range(len(self.titles)):
             self.sheet[f"{chr(ord('A') + column)}{to}"] = tmp[column]
         self.sheet.delete_rows(idx=frm if frm < to else frm + 1, amount=1)
+        self.highlight_row(to - 1 if frm < to else to)
         return to - 1 if frm < to else to
 
     def search_inactive_offers(self, offers: list[Offer]):
@@ -143,3 +162,11 @@ class Offersheet:
                 self.move_row(frm=row, to=self.find_first_empty_row_in_inactive())
         except TypeError:
             pass
+
+    def highlight_row(self, row):
+        redbg = PatternFill(patternType='solid', fgColor=Color(rgb='eb4949'))
+        for column in range(len(self.titles)):
+            self.sheet[f'{chr(ord("A") + column)}{row}'].fill = redbg
+# todo add macro to clear highlited offers
+
+# todo think about sorting
